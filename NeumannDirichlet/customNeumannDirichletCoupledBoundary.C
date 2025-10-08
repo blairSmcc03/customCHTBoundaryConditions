@@ -251,7 +251,7 @@ void customNeumannDirichletCoupledBoundary::updateCoeffs()
         this->refValue() = nbrIntFld;
         
     }else{
-        //push internal field to neighbour
+        //push boundary field to neighbour
         forAll(Tp, faceI){
             // height of current cell along patch
             my_point[0] = patch().Cf()[faceI].y();
