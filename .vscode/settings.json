@@ -1,0 +1,26 @@
+{
+    "files.associations": {
+        "*Dict": "OpenFOAM",
+        "*Properties": "OpenFOAM",
+        "fvSchemes": "OpenFOAM",
+        "fvSolution": "OpenFOAM",
+        "**/constant/g": "OpenFOAM",
+        "**/0/*": "OpenFOAM",
+        "**/0.orig/*": "OpenFOAM",
+        "turbulentTemperatureCoupledBaffleMixedFvPatchScalarField.C": "cpp",
+        "cust.C": "cpp",
+        "customCHTCoupledFvPatchField.C": "cpp",
+        "externalWallHeatFluxTemperatureFvPatchScalarField.C": "cpp",
+        "libcustcustomCHTCoupledFvPatchField.C.C": "cpp",
+        "customCHTCoupledBoundary.C": "cpp",
+        "array": "cpp",
+        "bitset": "cpp",
+        "string_view": "cpp",
+        "initializer_list": "cpp",
+        "utility": "cpp",
+        "customNeumannDirichletCoupledBoundary.C": "cpp",
+        "customLICoupledBoundary.C": "cpp",
+        "random": "cpp",
+        "ostream": "cpp"
+    }
+}
