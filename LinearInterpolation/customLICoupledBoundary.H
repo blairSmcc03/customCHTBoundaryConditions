@@ -105,8 +105,8 @@ class customLICoupledBoundary
     // Private data
     
     std::vector<std::unique_ptr<mui::uniface<mui::mui_config>>> mui_ifs;
-    
-    mui::sampler_exact<mui::mui_config> spatial_sampler;
+
+    mui::sampler_pseudo_nearest_neighbor<mui::mui_config> spatial_sampler{0.1};
     mui::temporal_sampler_exact<mui::mui_config> temporal_sampler;
 
 public:

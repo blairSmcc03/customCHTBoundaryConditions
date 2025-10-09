@@ -33,7 +33,6 @@ Here we impose a Dirichlet Condition (fixedValue) on one side and Neumann Condit
 
 Here the superscript denotes the iteration number the given temperature is from.
 
-
 Each side decides which kind of condition it will impose based on the convergenceCoefficient variable. If the the Neumann side has a convergenceCoefficient greater than 1 we will get blow up since we recursively multiply by the convergenceCoefficient. Since one side must have a convergenceCoefficient smaller than 1 we always set this side to impose the Neumann Condition.
 
 ## Building

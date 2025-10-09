@@ -243,12 +243,10 @@ void customLICoupledBoundary::updateCoeffs()
 
     //fetch internal field from neighbour
     scalarField nbrIntFld = scalarField(this->size());
-    std::vector<double> fetch_vals = mui_ifs[0]->fetch_values<mui::mui_config::REAL>( "temp", time, temporal_sampler );
-    
     //create scalarField from fetched values
-    // Possible optimisation here using MPI/MUI datatypes, might be able to fetch to a scalarField
     forAll(nbrIntFld, faceI){
-        nbrIntFld[faceI] = fetch_vals[faceI];
+        my_point[0] = patch().Cf()[faceI].y();
+        nbrIntFld[faceI] = mui_ifs[0]->fetch("temp", my_point, time, spatial_sampler, temporal_sampler);
     }
     this->refValue() = nbrIntFld;
 

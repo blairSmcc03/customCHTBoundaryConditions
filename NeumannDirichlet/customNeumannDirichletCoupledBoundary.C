@@ -230,7 +230,7 @@ void customNeumannDirichletCoupledBoundary::updateCoeffs()
     if(dirichBoundary){
         //Calculate heatflux
         scalarField Q = kappaTp*patch().magSf()*snGrad();
-
+        
         // push flux to neighbour
         forAll(Q, faceI){
             my_point[0] = patch().Cf()[faceI].y();
@@ -241,12 +241,11 @@ void customNeumannDirichletCoupledBoundary::updateCoeffs()
 
         //fetch temperature from neighbour
         scalarField nbrIntFld = scalarField(this->size());
-        std::vector<double> fetch_vals = mui_ifs[0]->fetch_values<mui::mui_config::REAL>( "temp", time, temporal_sampler );
         
         // create scalarField from fetched values
-        // Possible optimisation here using MPI/MUI datatypes, might be able to fetch to a scalarField
         forAll(nbrIntFld, faceI){
-            nbrIntFld[faceI] = fetch_vals[faceI];
+            my_point[0] = patch().Cf()[faceI].y();
+            nbrIntFld[faceI] = mui_ifs[0]->fetch("temp", my_point, time, spatial_sampler, temporal_sampler);
         }
         this->refValue() = nbrIntFld;
         
@@ -262,9 +261,9 @@ void customNeumannDirichletCoupledBoundary::updateCoeffs()
         //fetch heat flux from neighbour
         scalarField internal = patchInternalField();
         scalarField nbrFluxFld = scalarField(this->size());
-        std::vector<double> fetch_vals = mui_ifs[0]->fetch_values<mui::mui_config::REAL>( "flux", time, temporal_sampler );
         forAll(nbrFluxFld, faceI){
-            nbrFluxFld[faceI] = (fetch_vals[faceI])/(kappaTp[faceI]*this->size());
+            my_point[0] = patch().Cf()[faceI].y();
+            nbrFluxFld[faceI] = mui_ifs[0]->fetch("flux", my_point, time, spatial_sampler, temporal_sampler)/(kappaTp[faceI]*this->size());
         }
         this->refValue() = internal - nbrFluxFld/(patch().deltaCoeffs()*patch().magSf());
     }
