@@ -21,6 +21,8 @@
         "customNeumannDirichletCoupledBoundary.C": "cpp",
         "customLICoupledBoundary.C": "cpp",
         "random": "cpp",
-        "ostream": "cpp"
+        "ostream": "cpp",
+        "controldictlinearinterpolation": "cpp",
+        "temperatureCoupledBase.C": "cpp"
     }
 }

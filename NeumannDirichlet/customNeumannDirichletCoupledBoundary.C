@@ -274,6 +274,7 @@ void customNeumannDirichletCoupledBoundary::updateCoeffs()
     Info<<"Average T at rightWall: " <<  average(Tp) << endl;
 
     mixedFvPatchScalarField::updateCoeffs();
+    mui_ifs[0]->forget(time);
     UPstream::msgType(oldTag);  // Restore tag
 }
 

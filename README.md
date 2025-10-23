@@ -49,3 +49,13 @@ Add the following line to your controlDict. Then use the patch types as normal. 
 ```c++
 libs("liblibcustomCoupledBoundary.so")
 ```
+
+To add the patch type to 0/T use the following format:
+```
+<patchName>
+{   
+    type            customNeumannDirichletCoupledBoundary;
+    kappaMethod     solidThermo;
+    value           uniform 273.15;
+}
+```

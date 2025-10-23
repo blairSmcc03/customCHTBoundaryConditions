@@ -254,6 +254,8 @@ void customLICoupledBoundary::updateCoeffs()
 
     this->refGrad() = Zero;
     mixedFvPatchScalarField::updateCoeffs();
+
+    mui_ifs[0]->forget(time);
     
     UPstream::msgType(oldTag);  // Restore tag
 }
