@@ -93,16 +93,21 @@ customNeumannDirichletCoupledBoundary
     mui_ifs=mui::create_uniface<mui::mui_config>( "OpenFOAM", ifsName );	    
     Info <<  "OF solver Finsihed creating MUI interface " << endl; 
 
-
-    //set dt to minimum value among all solvers
+   // send deltaT to other solver
     Time& runTime = const_cast<Time&>(this->db().time());
-    scalar dt = runTime.deltaTValue();
-    Info << "DT before: " << dt << endl;
+    mui::point1d my_point;
+    my_point[0]=0;
+    mui_ifs[0]->push("time", my_point, runTime.deltaTValue());
+    mui_ifs[0]->commit( 0 );
 
-    MPI_Allreduce(&dt, &dt, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
+    // fetch deltaT of other solver
+    scalar otherSolverTime = mui_ifs[0]->fetch("time", my_point, 0, spatial_sampler, temporal_sampler);
 
-    runTime.setDeltaT(dt, false);
-    Info << "DT after: " << runTime.deltaTValue() << endl;
+    // determine how many iterations of python solver per Openfoam iteration
+    iterationStep = (int)ceil(runTime.deltaTValue()/otherSolverTime);
+
+    Info << "OF iteration step: " << iterationStep << endl;
+    iteration = iterationStep;
     
     if (this->readMixedEntries(dict))
     {
@@ -194,10 +199,7 @@ void customNeumannDirichletCoupledBoundary::updateCoeffs()
 
     // Since we're inside initEvaluate/evaluate there might be processor
     // comms underway. Change the tag we use.
-    const int oldTag = UPstream::incrMsgType();
-
-    // get current time for MUI
-    scalar time =  this->db().time().value();  
+    const int oldTag = UPstream::incrMsgType(); 
 
     //get kappa from thermo object
     const scalarField& Tp = *this;
@@ -237,7 +239,7 @@ void customNeumannDirichletCoupledBoundary::updateCoeffs()
             //multiply by number of nodes on patch to ensure sum of heat flux is consistent for non-conforming meshes
             mui_ifs[0]->push("flux", my_point, Q[faceI]*this->size());
         }
-        mui_ifs[0]->commit( time );
+        mui_ifs[0]->commit( iteration);
 
         //fetch temperature from neighbour
         scalarField nbrIntFld = scalarField(this->size());
@@ -245,7 +247,7 @@ void customNeumannDirichletCoupledBoundary::updateCoeffs()
         // create scalarField from fetched values
         forAll(nbrIntFld, faceI){
             my_point[0] = patch().Cf()[faceI].y();
-            nbrIntFld[faceI] = mui_ifs[0]->fetch("temp", my_point, time, spatial_sampler, temporal_sampler);
+            nbrIntFld[faceI] = mui_ifs[0]->fetch("temp", my_point, iteration, spatial_sampler, temporal_sampler);
         }
         this->refValue() = nbrIntFld;
         
@@ -256,14 +258,14 @@ void customNeumannDirichletCoupledBoundary::updateCoeffs()
             my_point[0] = patch().Cf()[faceI].y();
             mui_ifs[0]->push("temp", my_point, Tp[faceI]);
         }  
-        mui_ifs[0]->commit(time);
+        mui_ifs[0]->commit(iteration);
 
         //fetch heat flux from neighbour
         scalarField internal = patchInternalField();
         scalarField nbrFluxFld = scalarField(this->size());
         forAll(nbrFluxFld, faceI){
             my_point[0] = patch().Cf()[faceI].y();
-            nbrFluxFld[faceI] = mui_ifs[0]->fetch("flux", my_point, time, spatial_sampler, temporal_sampler)/(kappaTp[faceI]*this->size());
+            nbrFluxFld[faceI] = mui_ifs[0]->fetch("flux", my_point, iteration, spatial_sampler, temporal_sampler)/(kappaTp[faceI]*this->size());
         }
         this->refValue() = internal - nbrFluxFld/(patch().deltaCoeffs()*patch().magSf());
     }
@@ -272,9 +274,12 @@ void customNeumannDirichletCoupledBoundary::updateCoeffs()
     this->refGrad() = Zero;
 
     Info<<"Average T at rightWall: " <<  average(Tp) << endl;
-
     mixedFvPatchScalarField::updateCoeffs();
-    mui_ifs[0]->forget(time);
+
+    mui_ifs[0]->forget(iteration);
+    iteration += iterationStep;
+    
+    
     UPstream::msgType(oldTag);  // Restore tag
 }
 

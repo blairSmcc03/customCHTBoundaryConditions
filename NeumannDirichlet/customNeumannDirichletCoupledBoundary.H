@@ -111,6 +111,8 @@ class customNeumannDirichletCoupledBoundary
 
     bool boundaryInitialised = false;
     bool dirichBoundary;
+    int iteration;
+    int iterationStep;
 
 public:
 

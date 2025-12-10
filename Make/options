@@ -15,9 +15,8 @@ EXE_INC = \
     -I$(LIB_SRC)/TurbulenceModels/turbulenceModels/lnInclude \
     -I$(LIB_SRC)/thermoTools/lnInclude \
     -I$(LIB_SRC)/finiteVolume/fields/fvPatchFields/basic \
-    -Icoupling_lib/MUI/src \
-    -I/usr/lib/x86_64-linux-gnu/openmpi/include \
-    -L/usr/lib/x86_64-linux-gnu
+    -I$(SPACK_MUI_PATH)/MUI-2.0.0/include \
+    -I$(SPACK_MPI_PATH)/include
 
 LIB_LIBS = \
     -lmpi \

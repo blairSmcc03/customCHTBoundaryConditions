@@ -92,19 +92,22 @@ customLICoupledBoundary
     ifsName.emplace_back("ifs" + std::to_string(rank+1));
     mui_ifs=mui::create_uniface<mui::mui_config>( "OpenFOAM", ifsName );	    
     Info <<  "OF solver Finsihed creating MUI interface " << endl; 
-
-
-    //set dt to minimum value among all solvers
-    Time& runTime = const_cast<Time&>(this->db().time());
-    scalar dt = runTime.deltaTValue();
-    Info << "DT before: " << dt << endl;
-
-    MPI_Allreduce(&dt, &dt, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
-
-    runTime.setDeltaT(dt, false);
-    Info << "DT after: " << runTime.deltaTValue() << endl;
-
     
+    // send deltaT to other solver
+    Time& runTime = const_cast<Time&>(this->db().time());
+    mui::point1d my_point;
+    my_point[0]=0;
+    mui_ifs[0]->push("time", my_point, runTime.deltaTValue());
+    mui_ifs[0]->commit( 0 );
+
+    // fetch deltaT of other solver
+    scalar otherSolverTime = mui_ifs[0]->fetch("time", my_point, 0, spatial_sampler, temporal_sampler);
+
+    // determine how many iterations of python solver per Openfoam iteration
+    iterationStep = (int)ceil(runTime.deltaTValue()/otherSolverTime);
+
+    Info << "OF iteration step: " << iterationStep << endl;
+    iteration = iterationStep;
 
     if (this->readMixedEntries(dict))
     {
@@ -212,9 +215,6 @@ void customLICoupledBoundary::updateCoeffs()
     // comms underway. Change the tag we use.
     const int oldTag = UPstream::incrMsgType();
 
-    // get current time for MUI
-    scalar time =  this->db().time().value();  
-
     // calculate kP/deltaP and push to neighbour
     const scalarField& Tp = *this;
     // deltaCoeffs = 1 / (distance between internalField and patch) for all patch faces
@@ -231,11 +231,12 @@ void customLICoupledBoundary::updateCoeffs()
         my_point[0] = patch().Cf()[faceI].y();
         mui_ifs[0]->push("temp", my_point, internal[faceI]);
     }  
-    mui_ifs[0]->commit(time);
+    mui_ifs[0]->commit(iteration);
 
     // fetch kN/deltaN from neighbour and create scalarField
     my_point[0] = 0;
-    scalar nbrKDelta = mui_ifs[0]->fetch("weight", my_point, time, spatial_sampler, temporal_sampler);
+
+    scalar nbrKDelta = mui_ifs[0]->fetch("weight", my_point, iteration, spatial_sampler, temporal_sampler);
     scalarField nbrKDeltaField = scalarField(this->size(), nbrKDelta);
 
     this->valueFraction() = nbrKDeltaField/(nbrKDeltaField + myKDelta);
@@ -246,16 +247,15 @@ void customLICoupledBoundary::updateCoeffs()
     //create scalarField from fetched values
     forAll(nbrIntFld, faceI){
         my_point[0] = patch().Cf()[faceI].y();
-        nbrIntFld[faceI] = mui_ifs[0]->fetch("temp", my_point, time, spatial_sampler, temporal_sampler);
+        nbrIntFld[faceI] = mui_ifs[0]->fetch("temp", my_point, iteration, spatial_sampler, temporal_sampler);
     }
     this->refValue() = nbrIntFld;
-
     
-
     this->refGrad() = Zero;
     mixedFvPatchScalarField::updateCoeffs();
 
-    mui_ifs[0]->forget(time);
+    mui_ifs[0]->forget(iteration);
+    iteration += iterationStep;
     
     UPstream::msgType(oldTag);  // Restore tag
 }

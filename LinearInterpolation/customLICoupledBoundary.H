@@ -108,6 +108,8 @@ class customLICoupledBoundary
 
     mui::sampler_pseudo_nearest_neighbor<mui::mui_config> spatial_sampler{0.1};
     mui::temporal_sampler_exact<mui::mui_config> temporal_sampler;
+    int iteration;
+    int iterationStep;
 
 public:
 
