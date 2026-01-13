@@ -87,12 +87,12 @@ customLICoupledBoundary
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     // intialise MUI interface
-    // TODO: Generalise for arbitray postition not only left->right
+    // TODO: Generalise for arbitrary position not only left->right
     std::vector<std::string> ifsName;
     ifsName.emplace_back("ifs" + std::to_string(rank+1));
     mui_ifs=mui::create_uniface<mui::mui_config>( "OpenFOAM", ifsName );	    
-    Info <<  "OF solver Finsihed creating MUI interface " << endl; 
-    
+    Info <<  "OF solver Finished creating MUI interface " << endl; 
+
     // send deltaT to other solver
     Time& runTime = const_cast<Time&>(this->db().time());
     mui::point1d my_point;
@@ -107,6 +107,7 @@ customLICoupledBoundary
     iterationStep = (int)ceil(runTime.deltaTValue()/otherSolverTime);
 
     Info << "OF iteration step: " << iterationStep << endl;
+    // every one iteration, python solver loops iterationStep times
     iteration = iterationStep;
 
     if (this->readMixedEntries(dict))
@@ -120,20 +121,6 @@ customLICoupledBoundary
         refGrad() = Zero;
         valueFraction() = 1.0;
     }
-
-// This blocks (crashes) with more than two worlds!
-//
-///    // Store patch value as initial guess when running in database mode
-///    mappedPatchFieldBase<scalar>::initRetrieveField
-///    (
-///        this->internalField().name(),
-///        *this
-///    );
-///    mappedPatchFieldBase<scalar>::initRetrieveField
-///    (
-///        this->internalField().name() + "_weights",
-///        this->patch().deltaCoeffs()
-///    );
 }
 
 

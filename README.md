@@ -36,10 +36,8 @@ Here the superscript denotes the iteration number the given temperature is from.
 Each side decides which kind of condition it will impose based on the convergenceCoefficient variable. If the the Neumann side has a convergenceCoefficient greater than 1 we will get blow up since we recursively multiply by the convergenceCoefficient. Since one side must have a convergenceCoefficient smaller than 1 we always set this side to impose the Neumann Condition.
 
 ## Building
-Dependency management is done via [spack](https://spack.io/). To use the existing build system you must have an active spack environment with mui and mpi installed. Alternatively you can manually edit Make/options to have the include path for your local mpi and mui installation. If you have spack activated simply run:
+Dependency management is done via [spack](https://spack.io/). To use the existing build system you must have an active spack environment with [mui](https://packages.spack.io/package.html?name=py-mui4py) and [mpi](https://packages.spack.io/package.html?name=py-mpi4py) installed. Alternatively you can manually edit Make/options to have the include path for your local mpi and mui installation. If you have spack activated simply run:
 ```bash
-git submodule intit
-git submodule update
 ./build.sh
 ```
 
